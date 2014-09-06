@@ -1,10 +1,11 @@
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
-import java.io.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
-import javax.imageio.*;
-import javax.swing.*;
+import javax.imageio.ImageIO;
 
 public class StainedGlassEffect extends Component {
 	private static final long serialVersionUID = 7292337168285997704L;
@@ -24,17 +25,16 @@ public class StainedGlassEffect extends Component {
 				targetImage.getHeight(), numberOfSeeds);
 	}
 
-	public StainedGlassEffect() {
+	public void paint(Graphics g) {		
+		String format = "jpg";
+		File saveFile = new File("output."+format);
+		BufferedImage resultImage = stainedGlassFilter.filter(targetImage, null);
 		try {
-			targetImage = ImageIO.read(new File("input.jpg"));
+			ImageIO.write(resultImage, format, saveFile);
 		} catch (IOException e) {
-			System.out.println(e.getMessage());
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-	}
-
-	public void paint(Graphics g) {
-		Graphics2D g2d = (Graphics2D) g;
-		g2d.drawImage(targetImage, stainedGlassFilter, 0, 0);
 	}
 
 	public Dimension getPreferredSize() {
@@ -46,17 +46,8 @@ public class StainedGlassEffect extends Component {
 		}
 	}
 
-	public static void main(String[] args) {
-		JFrame f = new JFrame("Beware! Stained Glass Effect");
-
-		f.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				System.exit(0);
-			}
-		});
-		
-		f.add(new StainedGlassEffect("PJ.jpg", null, 5000));
-		f.pack();
-		f.setVisible(true);
+	public static void main(String[] args) {	
+		StainedGlassEffect effect = new StainedGlassEffect("PJ.jpg", null, 10000);
+		effect.paint(null);
 	}
 }

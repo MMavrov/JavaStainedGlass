@@ -42,7 +42,7 @@ public class VoronoiCell {
 			alpha += (RGBvalue >> 24) & 0xff;
 			red += (RGBvalue >> 16) & 0xff;
 			green += (RGBvalue >> 8) & 0xff;
-			blue += (RGBvalue >> 16) & 0xff;
+			blue += RGBvalue & 0xff;
 		}
 
 		alpha /= RGBpoints.size();

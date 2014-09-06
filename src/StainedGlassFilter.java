@@ -56,8 +56,8 @@ public class StainedGlassFilter implements BufferedImageOp {
 
 				if ((currentPixelNumber * 100) / (height * width) != percentDone) {
 					percentDone = (currentPixelNumber * 100) / (height * width);
-					System.out
-							.println(String.format("%03d%% done!", percentDone));
+					System.out.println(String.format("%d%% done!",
+							percentDone));
 				}
 			}
 		}
@@ -70,7 +70,7 @@ public class StainedGlassFilter implements BufferedImageOp {
 
 		return result;
 	}
-	
+
 	@Override
 	public BufferedImage createCompatibleDestImage(BufferedImage src,
 			ColorModel destCM) {
