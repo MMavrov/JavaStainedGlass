@@ -8,16 +8,50 @@ import java.awt.image.BufferedImageOp;
 import java.awt.image.ColorModel;
 import java.util.Random;
 import java.util.Vector;
+import edu.wlu.cs.levy.CG.KDTree;
+import edu.wlu.cs.levy.CG.KeyDuplicateException;
+import edu.wlu.cs.levy.CG.KeySizeException;
 
 public class StainedGlassFilter implements BufferedImageOp {
-	Vector<VoronoiCell> cells;
+	private KDTree<VoronoiCell> cells;
+	private Vector<double[]> seedsCoordinates;
 
-	public StainedGlassFilter(int imageWidth, int imageHeight,
-			int numberOfPivots) {
-		cells = new Vector<VoronoiCell>();
-		for (int i = 0; i < numberOfPivots; i++) {
-			cells.add(new VoronoiCell(new Point(new Random()
-					.nextInt(imageWidth), new Random().nextInt(imageHeight))));
+	public StainedGlassFilter(int imageWidth, int imageHeight, int numberOfSeeds) {
+		cells = new KDTree<VoronoiCell>(2);
+		seedsCoordinates = new Vector<double[]>();
+
+		for (int i = 0; i < numberOfSeeds; i++) {
+			int xCoordinate = 0;
+			int yCoordinate = 0;
+
+			// Making sure that all points are generated and they are different
+			VoronoiCell amIExist = null;
+			do {
+				xCoordinate = new Random().nextInt(imageWidth);
+				yCoordinate = new Random().nextInt(imageHeight);
+
+				try {
+					amIExist = cells.search(new double[] { xCoordinate,
+							yCoordinate });
+				} catch (KeySizeException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} while (amIExist != null);
+
+			try {
+				cells.insert(new double[] { xCoordinate, yCoordinate },
+						new VoronoiCell(new Point(xCoordinate, yCoordinate)));
+				seedsCoordinates.add(new double[] { xCoordinate,
+						yCoordinate });
+			} catch (KeySizeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (KeyDuplicateException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 		}
 	}
 
@@ -31,40 +65,55 @@ public class StainedGlassFilter implements BufferedImageOp {
 		int height = src.getHeight();
 
 		BufferedImage result = src;
-		int seedIndex = 0;
-		int currentPixelNumber = 0;
+		int counter = 0;
 		int percentDone = 0;
 
-		for (int y = 0; y < width; y++) {
-			for (int x = 0; x < height; x++) {
-				Point currentPoint = new Point(y, x);
-				double minDistance = Double.MAX_VALUE;
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				Point currentPoint = new Point(x, y);
 
-				for (int i = 0; i < cells.size(); i++) {
-					double distance = currentPoint.distance(cells.get(i)
-							.getSeed());
-					if (distance < minDistance) {
-						minDistance = distance;
-						seedIndex = i;
-					}
+				VoronoiCell nearestCell = null;
+				try {
+					nearestCell = cells.nearest(new double[] { x, y });
+				} catch (KeySizeException e) {
+					e.getMessage();
 				}
 
-				cells.get(seedIndex).setRGBPoint(src.getRGB(y, x));
-				cells.get(seedIndex).setPoint(currentPoint);
+				nearestCell.setBelongingPointsColors(src.getRGB(x, y));
+				nearestCell.setBelongingPoint(currentPoint);
 
-				currentPixelNumber += 1;
+				counter++;
 
-				if ((currentPixelNumber * 100) / (height * width) != percentDone) {
-					percentDone = (currentPixelNumber * 100) / (height * width);
-					System.out.println(String.format("%d%% done!",
-							percentDone));
+				if ((counter * 100) / (height * width) != percentDone) {
+					percentDone = (counter * 100) / (height * width);
+					System.out.println(String.format(
+							"Calculating cells. %d%% done!", percentDone));
 				}
 			}
 		}
 
-		for (VoronoiCell voronoiCell : cells) {
-			for (Point point : voronoiCell.getPoints()) {
-				result.setRGB(point.x, point.y, voronoiCell.getAverageColor());
+		counter = 0;
+		percentDone = 0;
+
+		for (double[] seedCoordinates : seedsCoordinates) {
+			VoronoiCell cell = null;
+			try {
+				cell = cells.search(seedCoordinates);
+			} catch (KeySizeException e) {
+				e.printStackTrace();
+			}
+			
+			int averageColor = cell.getAverageColor();
+			for (Point point : cell.getBelongingPoints()) {
+				result.setRGB(point.x, point.y, averageColor);
+			}
+			
+			counter++;
+
+			if ((counter * 100) / seedsCoordinates.size() != percentDone) {
+				percentDone = (counter * 100) / seedsCoordinates.size();
+				System.out.println(String.format(
+						"Calculating colors. %d%% done!", percentDone));
 			}
 		}
 

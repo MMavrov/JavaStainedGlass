@@ -12,6 +12,7 @@ public class StainedGlassEffect extends Component {
 
 	BufferedImage targetImage;
 	StainedGlassFilter stainedGlassFilter;
+	String processedFile;
 
 	public StainedGlassEffect(String targetFile, String resultFile,
 			int numberOfSeeds) {
@@ -21,16 +22,19 @@ public class StainedGlassEffect extends Component {
 			System.out.println(e.getMessage());
 		}
 
+		this.processedFile = resultFile;
 		stainedGlassFilter = new StainedGlassFilter(targetImage.getWidth(),
 				targetImage.getHeight(), numberOfSeeds);
 	}
 
-	public void paint(Graphics g) {		
-		String format = "jpg";
-		File saveFile = new File("output."+format);
-		BufferedImage resultImage = stainedGlassFilter.filter(targetImage, null);
+	public void paint(Graphics g) {
+		File saveFile = new File(processedFile);
+		BufferedImage resultImage = stainedGlassFilter
+				.filter(targetImage, null);
 		try {
-			ImageIO.write(resultImage, format, saveFile);
+			System.out.println(String.format("Writing to file \"%s\"",
+					processedFile));
+			ImageIO.write(resultImage, "jpg" ,saveFile);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -46,8 +50,25 @@ public class StainedGlassEffect extends Component {
 		}
 	}
 
-	public static void main(String[] args) {	
-		StainedGlassEffect effect = new StainedGlassEffect("PJ.jpg", null, 10000);
-		effect.paint(null);
+	// public static void main(String[] args) {
+	// StainedGlassEffect effect = new StainedGlassEffect(
+	// "PJ.jpg", "output.jpg", 5000);
+	// effect.paint(null);
+	// }
+
+	public static void main(String[] args) {
+		if (args.length == 2) {
+			StainedGlassEffect effect = new StainedGlassEffect(args[0],
+					args[1], 5000);
+			effect.paint(null);
+		} else if (args.length == 3) {
+			StainedGlassEffect effect = new StainedGlassEffect(args[0],
+					args[1], Integer.parseInt(args[2]));
+			effect.paint(null);
+		} else {
+			System.out
+					.println("Please add arguments as input and output image including the file extensions.");
+		}
+
 	}
 }
